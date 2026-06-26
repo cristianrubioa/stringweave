@@ -1,4 +1,7 @@
 const BUFFER_SIZE = 500;
+const EDGE_BLEND = 0.35;
+const INK_WEIGHT = 4000;
+const REUSE_PENALTY = 0.5;
 
 type WorkerInput = {
   imageData: ImageData;
@@ -38,6 +41,25 @@ function toGrayscale(imageData: ImageData): Uint8Array {
     }
   }
   return dst;
+}
+
+function applyEdgeBoost(buffer: Uint8Array): void {
+  const size = BUFFER_SIZE;
+  const edges = new Uint8Array(size * size);
+  for (let y = 1; y < size - 1; y++) {
+    for (let x = 1; x < size - 1; x++) {
+      const gx =
+        -buffer[(y - 1) * size + (x - 1)] - 2 * buffer[y * size + (x - 1)] - buffer[(y + 1) * size + (x - 1)]
+        + buffer[(y - 1) * size + (x + 1)] + 2 * buffer[y * size + (x + 1)] + buffer[(y + 1) * size + (x + 1)];
+      const gy =
+        -buffer[(y - 1) * size + (x - 1)] - 2 * buffer[(y - 1) * size + x] - buffer[(y - 1) * size + (x + 1)]
+        + buffer[(y + 1) * size + (x - 1)] + 2 * buffer[(y + 1) * size + x] + buffer[(y + 1) * size + (x + 1)];
+      edges[y * size + x] = Math.min(255, Math.sqrt(gx * gx + gy * gy));
+    }
+  }
+  for (let i = 0; i < buffer.length; i++) {
+    buffer[i] = Math.min(255, Math.round(buffer[i] * (1 - EDGE_BLEND) + edges[i] * EDGE_BLEND));
+  }
 }
 
 function getNailPositions(pinCount: number): [number, number][] {
@@ -134,8 +156,13 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
     }
   }
 
+  applyEdgeBoost(buffer);
+
   const nails = getNailPositions(pinCount);
   const { pixels, offsets } = buildLineCache(nails);
+
+  const totalLines = (pinCount * (pinCount - 1)) / 2;
+  const lineUsage = new Uint16Array(totalLines);
 
   const minDist = Math.floor(pinCount * 0.05);
   const sequence: number[] = [];
@@ -165,7 +192,8 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
       for (let p = start; p < end; p++) {
         score += buffer[pixels[p]];
       }
-      score /= lineLen; // normalize by length so short and long lines compete fairly
+      score /= lineLen;
+      score /= (1 + lineUsage[li] * REUSE_PENALTY);
       if (score > bestScore) {
         bestScore = score;
         bestNail = candidate;
@@ -177,9 +205,12 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
     const li = lineIndex(current, bestNail, pinCount);
     const start = offsets[li];
     const end = offsets[li + 1];
+    const lineLen = end - start;
+    const decrement = Math.round(INK_WEIGHT / lineLen);
     for (let p = start; p < end; p++) {
-      buffer[pixels[p]] = Math.max(0, buffer[pixels[p]] - 25);
+      buffer[pixels[p]] = Math.max(0, buffer[pixels[p]] - decrement);
     }
+    lineUsage[li]++;
 
     batch.push([current, bestNail]);
     sequence.push(bestNail);
