@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { PageLoader } from "@/components/page-loader";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -27,6 +28,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-background text-foreground" suppressHydrationWarning>
+        <PageLoader />
         {children}
       </body>
     </html>
