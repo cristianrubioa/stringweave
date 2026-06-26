@@ -7,6 +7,7 @@ export interface StringArtCanvasHandle {
   drawLineBatch: (lines: [number, number][]) => void;
   highlightNail: (nailIndex: number, pinCount: number) => void;
   clearHighlight: (pinCount: number) => void;
+  exportPng: () => void;
 }
 
 interface Props {
@@ -102,6 +103,19 @@ export function StringArtCanvas({ ref, className, defaultPinCount }: Props) {
     ctx.fillText(String(nailIndex), x + 8, y + 4);
   }, [getLayout]);
 
+  const exportPng = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const filename = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
+    const url = canvas.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+  }, []);
+
   const clearHighlight = useCallback((pinCount: number) => {
     const ctx = getCtx();
     const layout = getLayout();
@@ -122,7 +136,8 @@ export function StringArtCanvas({ ref, className, defaultPinCount }: Props) {
     drawLineBatch,
     highlightNail,
     clearHighlight,
-  }), [drawFrame, drawLineBatch, highlightNail, clearHighlight]);
+    exportPng,
+  }), [drawFrame, drawLineBatch, highlightNail, clearHighlight, exportPng]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

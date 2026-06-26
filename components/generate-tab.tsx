@@ -10,7 +10,11 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PIN_OPTIONS = [120, 240, 280, 320, 480, 560, 640] as const;
 
-export function GenerateTab() {
+interface Props {
+  onSequenceReady: (data: { sequence: number[]; pinCount: number }) => void;
+}
+
+export function GenerateTab({ onSequenceReady }: Props) {
   const [pinCount, setPinCount] = useState(320);
   const [strokeCount, setStrokeCount] = useState(2000);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -26,10 +30,15 @@ export function GenerateTab() {
   const uploadLabelId = useId();
 
   const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
+  const MAX_SIZE = 5 * 1024 * 1024;
 
   const handleFile = useCallback((file: File) => {
     if (!ACCEPTED.includes(file.type)) {
       setUploadError("Only JPEG, PNG, and WebP images are accepted.");
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      setUploadError("Image must be smaller than 5 MB.");
       return;
     }
     setUploadError(null);
@@ -88,6 +97,7 @@ export function GenerateTab() {
           setRunning(false);
           worker.terminate();
           workerRef.current = null;
+          onSequenceReady({ sequence: msg.sequence, pinCount });
         }
       };
 
@@ -99,7 +109,7 @@ export function GenerateTab() {
   return (
     <div className="flex flex-1 min-h-0">
       <aside className="flex flex-col gap-5 w-80 shrink-0 border-r px-6 pt-6 pb-6">
-        <TabsList className="w-fit shrink-0">
+        <TabsList className="w-fit shrink-0 h-10">
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
         </TabsList>
@@ -131,7 +141,7 @@ export function GenerateTab() {
               <span className="text-sm text-muted-foreground text-center px-2">
                 Drag &amp; drop or click to upload
                 <br />
-                <span className="text-xs">JPEG · PNG · WebP</span>
+                <span className="text-xs">JPEG · PNG · WebP · Max 5 MB</span>
               </span>
             )}
           </div>
@@ -225,10 +235,20 @@ export function GenerateTab() {
       <div className="relative flex-1 min-w-0 min-h-0 overflow-hidden">
         <div className="absolute inset-6 flex items-center justify-center">
           <div
-            className="rounded-lg border bg-white overflow-hidden"
+            className="relative rounded-lg border bg-white overflow-hidden"
             style={{ height: "100%", width: "auto", maxWidth: "100%", aspectRatio: "1 / 1" }}
           >
             <StringArtCanvas ref={canvasRef} defaultPinCount={320} />
+            {sequence && (
+              <button
+                type="button"
+                onClick={() => canvasRef.current?.exportPng()}
+                title="Download as PNG"
+                className="absolute top-2 right-2 size-9 flex items-center justify-center rounded-md bg-background/80 border hover:bg-background transition-colors"
+              >
+                <i className="fa-solid fa-download text-sm" />
+              </button>
+            )}
           </div>
         </div>
       </div>

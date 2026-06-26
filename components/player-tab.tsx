@@ -16,12 +16,31 @@ import {
 import { parseSequenceFile } from "@/lib/export";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export function PlayerTab() {
+const SPEED_OPTIONS = [
+  { label: "¼x", step: 7,   title: "Quarter speed" },
+  { label: "½x", step: 15,  title: "Half speed" },
+  { label: "1x", step: 30,  title: "Normal speed" },
+  { label: "2x", step: 60,  title: "Double speed" },
+  { label: "4x", step: 120, title: "4× speed" },
+] as const;
+
+const HOLD_DELAY_MS = 400;
+const HOLD_INTERVAL_MS = 80;
+
+interface Props {
+  sharedSequence?: { sequence: number[]; pinCount: number } | null;
+  onClearSequence?: () => void;
+}
+
+export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
   const [sequence, setSequence] = useState<number[] | null>(null);
   const [pinCount, setPinCount] = useState(0);
   const [position, setPosition] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sequenceSource, setSequenceSource] = useState<"generate" | "file" | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [speed, setSpeed] = useState(30);
 
   const canvasRef = useRef<StringArtCanvasHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,6 +50,9 @@ export function PlayerTab() {
   const pinCountRef = useRef(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawnUpToRef = useRef(0);
+  const speedRef = useRef(30);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const total = sequence?.length ?? 0;
 
@@ -73,6 +95,15 @@ export function PlayerTab() {
     []
   );
 
+  const stepTo = useCallback((target: number) => {
+    const seq = sequenceRef.current;
+    if (!seq) return;
+    const clamped = Math.max(0, Math.min(seq.length - 1, target));
+    positionRef.current = clamped;
+    setPosition(clamped);
+    drawUpTo(clamped, drawnUpToRef.current);
+  }, [drawUpTo]);
+
   const handleSliderChange = useCallback(
     (raw: number | number[] | readonly number[]) => {
       const value = Array.isArray(raw) ? (raw as number[])[0] : (raw as number);
@@ -86,6 +117,21 @@ export function PlayerTab() {
     },
     [drawUpTo]
   );
+
+  const clearHold = useCallback(() => {
+    if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
+    if (holdIntervalRef.current) { clearInterval(holdIntervalRef.current); holdIntervalRef.current = null; }
+  }, []);
+
+  const startHold = useCallback((direction: -1 | 1) => {
+    holdTimerRef.current = setTimeout(() => {
+      holdIntervalRef.current = setInterval(() => {
+        const seq = sequenceRef.current;
+        if (!seq) return;
+        stepTo(positionRef.current + direction);
+      }, HOLD_INTERVAL_MS);
+    }, HOLD_DELAY_MS);
+  }, [stepTo]);
 
   const stopPlayback = useCallback(() => {
     if (rafRef.current !== null) {
@@ -102,7 +148,7 @@ export function PlayerTab() {
     const tick = () => {
       const seq = sequenceRef.current;
       if (!seq) return;
-      const next = positionRef.current + 30;
+      const next = positionRef.current + speedRef.current;
       const capped = Math.min(next, seq.length - 1);
 
       drawUpTo(capped, drawnUpToRef.current);
@@ -118,10 +164,25 @@ export function PlayerTab() {
     rafRef.current = requestAnimationFrame(tick);
   }, [drawUpTo, stopPlayback]);
 
+  const handleRestart = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    positionRef.current = 0;
+    drawnUpToRef.current = 0;
+    setPosition(0);
+    canvasRef.current?.drawFrame(pinCountRef.current);
+    if (playing) {
+      startPlayback();
+    }
+  }, [playing, startPlayback]);
+
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
+      const name = file.name;
       e.target.value = "";
 
       stopPlayback();
@@ -141,6 +202,8 @@ export function PlayerTab() {
         drawnUpToRef.current = 0;
         sequenceRef.current = result.sequence;
         pinCountRef.current = result.pinCount;
+        setSequenceSource("file");
+        setFileName(name);
         setTimeout(() => canvasRef.current?.drawFrame(result.pinCount), 0);
       };
       reader.readAsText(file);
@@ -148,30 +211,86 @@ export function PlayerTab() {
     [stopPlayback]
   );
 
+  const handleReset = useCallback(() => {
+    stopPlayback();
+    canvasRef.current?.drawFrame(pinCountRef.current);
+    setSequence(null);
+    setPinCount(0);
+    setPosition(0);
+    positionRef.current = 0;
+    drawnUpToRef.current = 0;
+    sequenceRef.current = null;
+    pinCountRef.current = 0;
+    setSequenceSource(null);
+    setFileName(null);
+    setError(null);
+    onClearSequence?.();
+  }, [stopPlayback, onClearSequence]);
+
+  useEffect(() => {
+    if (!sharedSequence) return;
+    stopPlayback();
+    setSequence(sharedSequence.sequence);
+    setPinCount(sharedSequence.pinCount);
+    setPosition(0);
+    positionRef.current = 0;
+    drawnUpToRef.current = 0;
+    sequenceRef.current = sharedSequence.sequence;
+    pinCountRef.current = sharedSequence.pinCount;
+    setSequenceSource("generate");
+    setFileName(null);
+    setTimeout(() => canvasRef.current?.drawFrame(sharedSequence.pinCount), 0);
+  }, [sharedSequence, stopPlayback]);
+
   useEffect(() => {
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+      if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
     };
   }, []);
 
   return (
     <div className="flex flex-1 min-h-0">
       <aside className="flex flex-col gap-5 w-80 shrink-0 border-r px-6 pt-6 pb-6">
-        <TabsList className="w-fit shrink-0">
+        <TabsList className="w-fit shrink-0 h-10">
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
         </TabsList>
+
         <div>
-          <Label className="block mb-2 text-base">Sequence file</Label>
-          <Button
-            variant="outline"
-            className="w-full h-11"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <i className="fa-solid fa-file-import" />
-            Import .txt
-          </Button>
+          <Label className="block mb-2 text-base">
+            {sequenceSource === "file" ? "Sequence file" : "Sequence"}
+          </Label>
+          {sequenceSource === null ? (
+            <Button
+              variant="outline"
+              className="w-full h-11"
+              onClick={() => fileInputRef.current?.click()}
+              title="Import a sequence .txt file"
+            >
+              <i className="fa-solid fa-file-import" />
+              Import .txt
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <div className="flex items-center gap-2 flex-1 h-11 rounded-md border px-3 text-sm text-muted-foreground overflow-hidden">
+                <i className="fa-solid fa-check shrink-0" />
+                <span className="truncate">
+                  {sequenceSource === "generate" ? "From Generate" : (fileName ?? "sequence.txt")}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                className="h-11 w-11 shrink-0 p-0"
+                onClick={handleReset}
+                title="Clear sequence and load another"
+              >
+                <i className="fa-solid fa-rotate" />
+              </Button>
+            </div>
+          )}
           <input
             ref={fileInputRef}
             type="file"
@@ -204,34 +323,73 @@ export function PlayerTab() {
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => {
-                  const prev = Math.max(0, position - 1);
-                  handleSliderChange([prev]);
-                }}
+                onClick={handleRestart}
                 disabled={position === 0}
+                title="Restart from beginning"
               >
-                ‹
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={() => (playing ? stopPlayback() : startPlayback())}
-              >
-                {playing ? "Pause" : "Play"}
+                <i className="fa-solid fa-backward-step" />
               </Button>
               <Button
                 variant="outline"
                 className="flex-1"
-                onClick={() => {
-                  const next = Math.min(total - 1, position + 1);
-                  handleSliderChange([next]);
-                }}
-                disabled={position >= total - 1}
+                onClick={() => stepTo(positionRef.current - 1)}
+                onPointerDown={() => startHold(-1)}
+                onPointerUp={clearHold}
+                onPointerLeave={clearHold}
+                disabled={position === 0}
+                title="Step back"
               >
-                ›
+                <i className="fa-solid fa-chevron-left" />
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => (playing ? stopPlayback() : startPlayback())}
+                title={playing ? "Pause" : "Play"}
+              >
+                <i className={playing ? "fa-solid fa-pause" : "fa-solid fa-play"} />
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => stepTo(positionRef.current + 1)}
+                onPointerDown={() => startHold(1)}
+                onPointerUp={clearHold}
+                onPointerLeave={clearHold}
+                disabled={position >= total - 1}
+                title="Step forward"
+              >
+                <i className="fa-solid fa-chevron-right" />
               </Button>
             </div>
 
-            <div className="text-xs text-muted-foreground">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-base">Speed</Label>
+              <div className="flex rounded-md border overflow-hidden">
+                {SPEED_OPTIONS.map((opt, i) => (
+                  <button
+                    key={opt.step}
+                    type="button"
+                    aria-pressed={speed === opt.step}
+                    title={opt.title}
+                    onClick={() => {
+                      setSpeed(opt.step);
+                      speedRef.current = opt.step;
+                    }}
+                    className={`flex-1 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+                      i > 0 ? "border-l" : ""
+                    } ${
+                      speed === opt.step
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-sm text-muted-foreground">
               <span className="font-medium">Pins:</span> {pinCount}
             </div>
           </>
