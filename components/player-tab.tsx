@@ -259,7 +259,6 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
           <TabsTrigger value="player">Player</TabsTrigger>
         </TabsList>
 
-        <div className="h-px bg-border" />
         <div>
           <Label className="block mb-2 text-base">
             {sequenceSource === "file" ? "Sequence file" : "Sequence"}
@@ -304,7 +303,6 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
 
         {sequence && (
           <>
-            <div className="h-px bg-border" />
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <Label className="text-base">Timeline</Label>
@@ -397,8 +395,8 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
           </>
         )}
 
-        <div className="mt-auto pt-4 border-t text-center text-sm text-muted-foreground">
-          Made with <span className="text-red-400">♥</span> by{" "}
+        <div className="-mx-6 px-6 mt-auto pt-4 border-t text-center text-sm text-muted-foreground">
+          Made with <span className="text-red-400 text-base">♥</span> by{" "}
           <a
             href="https://github.com/cristianrubioa"
             target="_blank"

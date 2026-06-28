@@ -112,7 +112,6 @@ export function GenerateTab({ onSequenceReady }: Props) {
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
         </TabsList>
-        <div className="h-px bg-border" />
         <div>
           <Label id={uploadLabelId} className="block mb-2 text-base">Image</Label>
           <div
@@ -157,7 +156,6 @@ export function GenerateTab({ onSequenceReady }: Props) {
           )}
         </div>
 
-        <div className="h-px bg-border" />
         <div className="flex flex-col gap-1.5">
           <Label className="text-base">Pins</Label>
           <div className="flex rounded-md border overflow-hidden">
@@ -200,7 +198,6 @@ export function GenerateTab({ onSequenceReady }: Props) {
           </div>
         </div>
 
-        <div className="h-px bg-border" />
         <Button
           onClick={generate}
           disabled={!imageFile || running}
@@ -221,8 +218,8 @@ export function GenerateTab({ onSequenceReady }: Props) {
           </Button>
         )}
 
-        <div className="mt-auto pt-4 border-t text-center text-sm text-muted-foreground">
-          Made with <span className="text-red-400">♥</span> by{" "}
+        <div className="-mx-6 px-6 mt-auto pt-4 border-t text-center text-sm text-muted-foreground">
+          Made with <span className="text-red-400 text-base">♥</span> by{" "}
           <a
             href="https://github.com/cristianrubioa"
             target="_blank"

@@ -5,7 +5,7 @@ export function Header() {
       <span className="text-[1.75rem] font-semibold tracking-wide leading-none">
         stringweave
       </span>
-      <span className="text-sm text-muted-foreground font-normal">string art generator</span>
+      <span className="text-sm text-muted-foreground font-normal">art generator</span>
     </header>
   );
 }
