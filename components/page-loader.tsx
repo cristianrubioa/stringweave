@@ -16,10 +16,10 @@ export function PageLoader() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] bg-background flex items-center justify-center transition-opacity duration-200 ${fading ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+      className={`crubio-loader bg-background ${fading ? "fade-out" : ""}`}
       aria-hidden
     >
-      <i className="fa-solid fa-circle-notch fa-spin text-3xl opacity-40" />
+      <i className="fa-solid fa-circle-notch fa-spin" />
     </div>
   );
 }
