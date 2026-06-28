@@ -17,7 +17,7 @@ export function exportSequence(sequence: number[]): void {
   URL.revokeObjectURL(url);
 }
 
-export function inferPinCount(maxIndex: number): number {
+function inferPinCount(maxIndex: number): number {
   const need = maxIndex + 1;
   return (
     SUPPORTED_PIN_COUNTS.find((p) => p >= need) ??

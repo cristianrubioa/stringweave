@@ -9,6 +9,8 @@ import { exportSequence } from "@/lib/export";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PIN_OPTIONS = [120, 240, 280, 320, 480, 560, 640] as const;
+const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
+const MAX_SIZE = 5 * 1024 * 1024;
 
 interface Props {
   onSequenceReady: (data: { sequence: number[]; pinCount: number }) => void;
@@ -28,9 +30,6 @@ export function GenerateTab({ onSequenceReady }: Props) {
   const workerRef = useRef<Worker | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadLabelId = useId();
-
-  const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
-  const MAX_SIZE = 5 * 1024 * 1024;
 
   const handleFile = useCallback((file: File) => {
     if (!ACCEPTED.includes(file.type)) {
@@ -113,6 +112,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
         </TabsList>
+        <div className="h-px bg-border" />
         <div>
           <Label id={uploadLabelId} className="block mb-2 text-base">Image</Label>
           <div
@@ -157,6 +157,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
           )}
         </div>
 
+        <div className="h-px bg-border" />
         <div className="flex flex-col gap-1.5">
           <Label className="text-base">Pins</Label>
           <div className="flex rounded-md border overflow-hidden">
@@ -199,6 +200,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
           </div>
         </div>
 
+        <div className="h-px bg-border" />
         <Button
           onClick={generate}
           disabled={!imageFile || running}

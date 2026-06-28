@@ -14,12 +14,6 @@ type BatchMessage = {
   lines: [number, number][];
 };
 
-type ProgressMessage = {
-  type: "progress";
-  done: number;
-  total: number;
-};
-
 type DoneMessage = {
   type: "done";
   sequence: number[];
@@ -103,11 +97,10 @@ function bresenham(
 
 function buildLineCache(
   nails: [number, number][]
-): { pixels: Int32Array; offsets: Uint32Array; counts: Uint32Array } {
+): { pixels: Int32Array; offsets: Uint32Array } {
   const n = nails.length;
   const totalLines = (n * (n - 1)) / 2;
   const offsets = new Uint32Array(totalLines + 1);
-  const counts = new Uint32Array(totalLines);
 
   const allPixelArrays: number[][] = [];
   let idx = 0;
@@ -117,7 +110,6 @@ function buildLineCache(
       const [x1, y1] = nails[b].map(Math.round) as [number, number];
       const px = bresenham(x0, y0, x1, y1);
       allPixelArrays.push(px);
-      counts[idx] = px.length;
       offsets[idx + 1] = offsets[idx] + px.length;
       idx++;
     }
@@ -130,7 +122,7 @@ function buildLineCache(
     offset += arr.length;
   }
 
-  return { pixels, offsets, counts };
+  return { pixels, offsets };
 }
 
 function lineIndex(a: number, b: number, n: number): number {
