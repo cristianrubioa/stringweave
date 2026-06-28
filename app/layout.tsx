@@ -3,7 +3,7 @@ import "./globals.css";
 import { PageLoader } from "@/components/page-loader";
 
 export const metadata: Metadata = {
-  title: "Stringweave — String Art",
+  title: "StringWeave — String Art",
   description: "Convert images to string art nail sequences",
   icons: { icon: "/favicon.svg" },
 };
