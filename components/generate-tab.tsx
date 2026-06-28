@@ -107,7 +107,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
 
   return (
     <div className="flex flex-1 min-h-0">
-      <aside className="flex flex-col gap-5 w-80 shrink-0 border-r px-6 pt-6 pb-6">
+      <aside className="flex flex-col gap-5 w-80 shrink-0 border-r px-6 pt-6">
         <TabsList className="w-fit shrink-0 h-10">
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
@@ -218,7 +218,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
           </Button>
         )}
 
-        <div className="-mx-6 px-6 mt-auto pt-4 border-t text-center text-sm text-muted-foreground">
+        <div className="-mx-6 px-6 mt-auto py-3 border-t text-center text-sm text-muted-foreground">
           Made with <span className="text-red-400 text-base">♥</span> by{" "}
           <a
             href="https://github.com/cristianrubioa"
