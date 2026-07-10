@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useImperativeHandle, useCallback, Ref } from "react";
+import { getNailPositions } from "@/lib/nail-positions";
+import { timestampFilename } from "@/lib/export";
 
 export interface StringArtCanvasHandle {
   drawFrame: (pinCount: number) => void;
@@ -12,20 +14,10 @@ export interface StringArtCanvasHandle {
 
 interface Props {
   ref: Ref<StringArtCanvasHandle>;
-  className?: string;
   defaultPinCount?: number;
 }
 
-function getNailPositions(pinCount: number, cx: number, cy: number, r: number) {
-  const positions: [number, number][] = [];
-  for (let i = 0; i < pinCount; i++) {
-    const angle = (2 * Math.PI * i) / pinCount - Math.PI / 2;
-    positions.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
-  }
-  return positions;
-}
-
-export function StringArtCanvas({ ref, className, defaultPinCount }: Props) {
+export function StringArtCanvas({ ref, defaultPinCount }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nailsRef = useRef<[number, number][]>([]);
   const pinCountRef = useRef(0);
@@ -106,9 +98,7 @@ export function StringArtCanvas({ ref, className, defaultPinCount }: Props) {
   const exportPng = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const filename = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
+    const filename = timestampFilename("png");
     const url = canvas.toDataURL("image/png");
     const a = document.createElement("a");
     a.href = url;
@@ -157,7 +147,6 @@ export function StringArtCanvas({ ref, className, defaultPinCount }: Props) {
   return (
     <canvas
       ref={canvasRef}
-      className={className}
       style={{ display: "block", width: "100%", height: "100%" }}
     />
   );

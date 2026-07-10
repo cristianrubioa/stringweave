@@ -1,12 +1,16 @@
 const SUPPORTED_PIN_COUNTS = [120, 240, 280, 320, 480, 560, 640] as const;
 
-export function exportSequence(sequence: number[]): void {
+export function timestampFilename(ext: string): string {
   const now = new Date();
   const pad = (n: number, len = 2) => String(n).padStart(len, "0");
-  const filename =
+  return (
     `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_` +
-    `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.txt`;
+    `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.${ext}`
+  );
+}
 
+export function exportSequence(sequence: number[]): void {
+  const filename = timestampFilename("txt");
   const content = `1\t${sequence.join(",")}\n`;
   const blob = new Blob([content], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
