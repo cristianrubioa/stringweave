@@ -7,7 +7,12 @@ export default function Home() {
       <Header />
       <main
         className="overflow-hidden"
-        style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minHeight: 0,
+        }}
       >
         <AppTabs />
       </main>

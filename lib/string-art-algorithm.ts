@@ -29,16 +29,27 @@ export function applyEdgeBoost(buffer: Uint8Array): void {
   for (let y = 1; y < size - 1; y++) {
     for (let x = 1; x < size - 1; x++) {
       const gx =
-        -buffer[(y - 1) * size + (x - 1)] - 2 * buffer[y * size + (x - 1)] - buffer[(y + 1) * size + (x - 1)]
-        + buffer[(y - 1) * size + (x + 1)] + 2 * buffer[y * size + (x + 1)] + buffer[(y + 1) * size + (x + 1)];
+        -buffer[(y - 1) * size + (x - 1)] -
+        2 * buffer[y * size + (x - 1)] -
+        buffer[(y + 1) * size + (x - 1)] +
+        buffer[(y - 1) * size + (x + 1)] +
+        2 * buffer[y * size + (x + 1)] +
+        buffer[(y + 1) * size + (x + 1)];
       const gy =
-        -buffer[(y - 1) * size + (x - 1)] - 2 * buffer[(y - 1) * size + x] - buffer[(y - 1) * size + (x + 1)]
-        + buffer[(y + 1) * size + (x - 1)] + 2 * buffer[(y + 1) * size + x] + buffer[(y + 1) * size + (x + 1)];
+        -buffer[(y - 1) * size + (x - 1)] -
+        2 * buffer[(y - 1) * size + x] -
+        buffer[(y - 1) * size + (x + 1)] +
+        buffer[(y + 1) * size + (x - 1)] +
+        2 * buffer[(y + 1) * size + x] +
+        buffer[(y + 1) * size + (x + 1)];
       edges[y * size + x] = Math.min(255, Math.sqrt(gx * gx + gy * gy));
     }
   }
   for (let i = 0; i < buffer.length; i++) {
-    buffer[i] = Math.min(255, Math.round(buffer[i] * (1 - EDGE_BLEND) + edges[i] * EDGE_BLEND));
+    buffer[i] = Math.min(
+      255,
+      Math.round(buffer[i] * (1 - EDGE_BLEND) + edges[i] * EDGE_BLEND),
+    );
   }
 }
 
@@ -46,13 +57,13 @@ export function bresenham(
   x0: number,
   y0: number,
   x1: number,
-  y1: number
+  y1: number,
 ): number[] {
   const pixels: number[] = [];
-  let dx = Math.abs(x1 - x0);
-  let dy = Math.abs(y1 - y0);
-  let sx = x0 < x1 ? 1 : -1;
-  let sy = y0 < y1 ? 1 : -1;
+  const dx = Math.abs(x1 - x0);
+  const dy = Math.abs(y1 - y0);
+  const sx = x0 < x1 ? 1 : -1;
+  const sy = y0 < y1 ? 1 : -1;
   let err = dx - dy;
   let x = x0;
   let y = y0;
@@ -63,15 +74,22 @@ export function bresenham(
     }
     if (x === x1 && y === y1) break;
     const e2 = 2 * err;
-    if (e2 > -dy) { err -= dy; x += sx; }
-    if (e2 < dx) { err += dx; y += sy; }
+    if (e2 > -dy) {
+      err -= dy;
+      x += sx;
+    }
+    if (e2 < dx) {
+      err += dx;
+      y += sy;
+    }
   }
   return pixels;
 }
 
-export function buildLineCache(
-  nails: [number, number][]
-): { pixels: Int32Array; offsets: Uint32Array } {
+export function buildLineCache(nails: [number, number][]): {
+  pixels: Int32Array;
+  offsets: Uint32Array;
+} {
   const n = nails.length;
   const totalLines = (n * (n - 1)) / 2;
   const offsets = new Uint32Array(totalLines + 1);
@@ -108,12 +126,13 @@ export function runGreedyAlgorithm(
   imageData: ImageData,
   pinCount: number,
   strokeCount: number,
-  onBatch?: (lines: [number, number][]) => void
+  onBatch?: (lines: [number, number][]) => void,
 ): number[] {
   const buffer = toGrayscale(imageData);
 
   // Contrast stretch: map [min, max] to [0, 255] so any image uses the full range
-  let minVal = 255, maxVal = 0;
+  let minVal = 255,
+    maxVal = 0;
   for (let i = 0; i < buffer.length; i++) {
     if (buffer[i] < minVal) minVal = buffer[i];
     if (buffer[i] > maxVal) maxVal = buffer[i];
@@ -151,7 +170,7 @@ export function runGreedyAlgorithm(
       if (candidate === current) continue;
       const dist = Math.min(
         Math.abs(candidate - current),
-        pinCount - Math.abs(candidate - current)
+        pinCount - Math.abs(candidate - current),
       );
       if (dist < minDist) continue;
 
@@ -165,7 +184,7 @@ export function runGreedyAlgorithm(
         score += buffer[pixels[p]];
       }
       score /= lineLen;
-      score /= (1 + lineUsage[li] * REUSE_PENALTY);
+      score /= 1 + lineUsage[li] * REUSE_PENALTY;
       if (score > bestScore) {
         bestScore = score;
         bestNail = candidate;

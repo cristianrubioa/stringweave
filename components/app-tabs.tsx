@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { GenerateTab } from "@/components/generate-tab";
 import { PlayerTab } from "@/components/player-tab";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 type SharedSequence = { sequence: number[]; pinCount: number };
 
 export function AppTabs() {
   const [activeTab, setActiveTab] = useState("generate");
-  const [sharedSequence, setSharedSequence] = useState<SharedSequence | null>(null);
+  const [sharedSequence, setSharedSequence] = useState<SharedSequence | null>(
+    null,
+  );
 
   return (
     <Tabs

@@ -2,7 +2,7 @@ export function getNailPositions(
   pinCount: number,
   cx: number,
   cy: number,
-  r: number
+  r: number,
 ): [number, number][] {
   const positions: [number, number][] = [];
   for (let i = 0; i < pinCount; i++) {

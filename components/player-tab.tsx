@@ -1,26 +1,21 @@
 "use client";
 
-import {
-  useRef,
-  useState,
-  useCallback,
-  useEffect,
-} from "react";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   StringArtCanvas,
   type StringArtCanvasHandle,
 } from "@/components/string-art-canvas";
-import { parseSequenceFile } from "@/lib/export";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { parseSequenceFile } from "@/lib/export";
 
 const SPEED_OPTIONS = [
-  { label: "¼x", step: 7,   title: "Quarter speed" },
-  { label: "½x", step: 15,  title: "Half speed" },
-  { label: "1x", step: 30,  title: "Normal speed" },
-  { label: "2x", step: 60,  title: "Double speed" },
+  { label: "¼x", step: 7, title: "Quarter speed" },
+  { label: "½x", step: 15, title: "Half speed" },
+  { label: "1x", step: 30, title: "Normal speed" },
+  { label: "2x", step: 60, title: "Double speed" },
   { label: "4x", step: 120, title: "4× speed" },
 ] as const;
 
@@ -38,7 +33,9 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
   const [position, setPosition] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sequenceSource, setSequenceSource] = useState<"generate" | "file" | null>(null);
+  const [sequenceSource, setSequenceSource] = useState<
+    "generate" | "file" | null
+  >(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [speed, setSpeed] = useState(30);
 
@@ -56,53 +53,53 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
 
   const total = sequence?.length ?? 0;
 
-  const drawUpTo = useCallback(
-    (target: number, currentDrawn: number) => {
-      if (!sequenceRef.current || !canvasRef.current) return;
-      const seq = sequenceRef.current;
-      const pc = pinCountRef.current;
-
-      if (target < currentDrawn) {
-        canvasRef.current.drawFrame(pc);
-        const lines: [number, number][] = [];
-        for (let i = 0; i < target && i + 1 < seq.length; i++) {
-          lines.push([seq[i], seq[i + 1]]);
-          if (lines.length === 50) {
-            canvasRef.current.drawLineBatch(lines);
-            lines.length = 0;
-          }
-        }
-        if (lines.length > 0) canvasRef.current.drawLineBatch(lines);
-        drawnUpToRef.current = target;
-      } else {
-        const lines: [number, number][] = [];
-        for (let i = currentDrawn; i < target && i + 1 < seq.length; i++) {
-          lines.push([seq[i], seq[i + 1]]);
-          if (lines.length === 50) {
-            canvasRef.current.drawLineBatch(lines);
-            lines.length = 0;
-          }
-        }
-        if (lines.length > 0) canvasRef.current.drawLineBatch(lines);
-        drawnUpToRef.current = target;
-      }
-
-      if (target > 0 && seq[target] !== undefined) {
-        canvasRef.current.clearHighlight(pc);
-        canvasRef.current.highlightNail(seq[target], pc);
-      }
-    },
-    []
-  );
-
-  const stepTo = useCallback((target: number) => {
+  const drawUpTo = useCallback((target: number, currentDrawn: number) => {
+    if (!sequenceRef.current || !canvasRef.current) return;
     const seq = sequenceRef.current;
-    if (!seq) return;
-    const clamped = Math.max(0, Math.min(seq.length - 1, target));
-    positionRef.current = clamped;
-    setPosition(clamped);
-    drawUpTo(clamped, drawnUpToRef.current);
-  }, [drawUpTo]);
+    const pc = pinCountRef.current;
+
+    if (target < currentDrawn) {
+      canvasRef.current.drawFrame(pc);
+      const lines: [number, number][] = [];
+      for (let i = 0; i < target && i + 1 < seq.length; i++) {
+        lines.push([seq[i], seq[i + 1]]);
+        if (lines.length === 50) {
+          canvasRef.current.drawLineBatch(lines);
+          lines.length = 0;
+        }
+      }
+      if (lines.length > 0) canvasRef.current.drawLineBatch(lines);
+      drawnUpToRef.current = target;
+    } else {
+      const lines: [number, number][] = [];
+      for (let i = currentDrawn; i < target && i + 1 < seq.length; i++) {
+        lines.push([seq[i], seq[i + 1]]);
+        if (lines.length === 50) {
+          canvasRef.current.drawLineBatch(lines);
+          lines.length = 0;
+        }
+      }
+      if (lines.length > 0) canvasRef.current.drawLineBatch(lines);
+      drawnUpToRef.current = target;
+    }
+
+    if (target > 0 && seq[target] !== undefined) {
+      canvasRef.current.clearHighlight(pc);
+      canvasRef.current.highlightNail(seq[target], pc);
+    }
+  }, []);
+
+  const stepTo = useCallback(
+    (target: number) => {
+      const seq = sequenceRef.current;
+      if (!seq) return;
+      const clamped = Math.max(0, Math.min(seq.length - 1, target));
+      positionRef.current = clamped;
+      setPosition(clamped);
+      drawUpTo(clamped, drawnUpToRef.current);
+    },
+    [drawUpTo],
+  );
 
   const handleSliderChange = useCallback(
     (raw: number | number[] | readonly number[]) => {
@@ -115,23 +112,32 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
         drawUpTo(value, drawnUpToRef.current);
       }, 150);
     },
-    [drawUpTo]
+    [drawUpTo],
   );
 
   const clearHold = useCallback(() => {
-    if (holdTimerRef.current) { clearTimeout(holdTimerRef.current); holdTimerRef.current = null; }
-    if (holdIntervalRef.current) { clearInterval(holdIntervalRef.current); holdIntervalRef.current = null; }
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
   }, []);
 
-  const startHold = useCallback((direction: -1 | 1) => {
-    holdTimerRef.current = setTimeout(() => {
-      holdIntervalRef.current = setInterval(() => {
-        const seq = sequenceRef.current;
-        if (!seq) return;
-        stepTo(positionRef.current + direction);
-      }, HOLD_INTERVAL_MS);
-    }, HOLD_DELAY_MS);
-  }, [stepTo]);
+  const startHold = useCallback(
+    (direction: -1 | 1) => {
+      holdTimerRef.current = setTimeout(() => {
+        holdIntervalRef.current = setInterval(() => {
+          const seq = sequenceRef.current;
+          if (!seq) return;
+          stepTo(positionRef.current + direction);
+        }, HOLD_INTERVAL_MS);
+      }, HOLD_DELAY_MS);
+    },
+    [stepTo],
+  );
 
   const stopPlayback = useCallback(() => {
     if (rafRef.current !== null) {
@@ -208,7 +214,7 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
       };
       reader.readAsText(file);
     },
-    [stopPlayback]
+    [stopPlayback],
   );
 
   const handleReset = useCallback(() => {
@@ -253,7 +259,10 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
 
   return (
     <div className="flex flex-1 min-h-0">
-      <aside className="flex flex-col gap-5 shrink-0 border-r px-6 pt-6" style={{ width: 'var(--panel-w, 20rem)' }}>
+      <aside
+        className="flex flex-col gap-5 shrink-0 border-r px-6 pt-6"
+        style={{ width: "var(--panel-w, 20rem)" }}
+      >
         <TabsList className="w-fit shrink-0 h-10">
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
@@ -278,7 +287,9 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
               <div className="flex items-center gap-2 flex-1 h-11 rounded-md border px-3 text-sm text-muted-foreground overflow-hidden">
                 <i className="fa-solid fa-check shrink-0" />
                 <span className="truncate">
-                  {sequenceSource === "generate" ? "From Generate" : (fileName ?? "sequence.txt")}
+                  {sequenceSource === "generate"
+                    ? "From Generate"
+                    : (fileName ?? "sequence.txt")}
                 </span>
               </div>
               <Button
@@ -346,7 +357,9 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
                 onClick={() => (playing ? stopPlayback() : startPlayback())}
                 title={playing ? "Pause" : "Play"}
               >
-                <i className={playing ? "fa-solid fa-pause" : "fa-solid fa-play"} />
+                <i
+                  className={playing ? "fa-solid fa-pause" : "fa-solid fa-play"}
+                />
               </Button>
               <Button
                 variant="outline"
@@ -395,7 +408,13 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
           </>
         )}
 
-        <div className="-mx-6 px-6 mt-auto border-t text-center text-sm text-muted-foreground" style={{ paddingTop: 'var(--footer-padding-y, 0.75rem)', paddingBottom: 'var(--footer-padding-y, 0.75rem)' }}>
+        <div
+          className="-mx-6 px-6 mt-auto border-t text-center text-sm text-muted-foreground"
+          style={{
+            paddingTop: "var(--footer-padding-y, 0.75rem)",
+            paddingBottom: "var(--footer-padding-y, 0.75rem)",
+          }}
+        >
           Made with <span className="text-red-400 text-base">♥</span> by{" "}
           <a
             href="https://github.com/cristianrubioa"
@@ -412,7 +431,12 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
         <div className="absolute inset-6 flex items-center justify-center">
           <div
             className="rounded-lg border bg-white overflow-hidden"
-            style={{ height: "100%", width: "auto", maxWidth: "100%", aspectRatio: "1 / 1" }}
+            style={{
+              height: "100%",
+              width: "auto",
+              maxWidth: "100%",
+              aspectRatio: "1 / 1",
+            }}
           >
             <StringArtCanvas ref={canvasRef} />
           </div>

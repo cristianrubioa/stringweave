@@ -19,13 +19,16 @@ type DoneMessage = {
 self.onmessage = (e: MessageEvent<WorkerInput>) => {
   const { imageData, pinCount, strokeCount } = e.data;
 
-  const sequence = runGreedyAlgorithm(imageData, pinCount, strokeCount, (lines) => {
-    const msg: BatchMessage = { type: "batch", lines };
-    self.postMessage(msg);
-  });
+  const sequence = runGreedyAlgorithm(
+    imageData,
+    pinCount,
+    strokeCount,
+    (lines) => {
+      const msg: BatchMessage = { type: "batch", lines };
+      self.postMessage(msg);
+    },
+  );
 
   const doneMsg: DoneMessage = { type: "done", sequence };
   self.postMessage(doneMsg);
 };
-
-export {};
