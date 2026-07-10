@@ -42,7 +42,7 @@ export function parseSequenceFile(text: string): {
       .trim()
       .split(",")
       .map((s) => parseInt(s.trim(), 10))
-      .filter((n) => !isNaN(n));
+      .filter((n) => !Number.isNaN(n));
     if (sequence.length === 0) return null;
     const maxIndex = Math.max(...sequence);
     const pinCount = inferPinCount(maxIndex);
