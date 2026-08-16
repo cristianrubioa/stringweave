@@ -14,6 +14,9 @@ export function Header() {
       <span className="text-sm text-muted-foreground font-normal">
         Art Generator
       </span>
+      <a className="crubio-home-link" href="https://crubio.fyi">
+        crubio.fyi
+      </a>
     </header>
   );
 }
