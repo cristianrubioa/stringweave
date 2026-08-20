@@ -215,7 +215,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
         <Button
           onClick={generate}
           disabled={!imageFile || running}
-          className="w-full h-11"
+          className="w-full h-10 text-base"
         >
           <i
             className={
