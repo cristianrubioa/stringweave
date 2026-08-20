@@ -119,7 +119,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
         className="flex flex-col gap-5 shrink-0 border-r px-6 pt-6"
         style={{ width: "var(--panel-w, 20rem)" }}
       >
-        <TabsList className="w-full shrink-0 h-10">
+        <TabsList className="w-full shrink-0 h-[38px]">
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
         </TabsList>
