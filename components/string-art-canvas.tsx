@@ -153,23 +153,33 @@ export function StringArtCanvas({ ref, defaultPinCount }: Props) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    // Measure the nearest ancestor marked as the sizing container, not the
+    // immediate parent: a caller may wrap the canvas in a shrink-to-fit
+    // positioning div (e.g. to anchor an overlay button), which would make
+    // the canvas's own on-screen size (set from this same callback) the
+    // thing being measured — circular, and it collapses to the browser's
+    // default 300x150 canvas size instead of the real available space.
+    const wrap = canvas?.closest<HTMLElement>('[data-slot="canvas-wrap"]');
+    if (!canvas || !wrap) return;
     const observer = new ResizeObserver(() => {
-      const size = Math.min(canvas.offsetWidth, canvas.offsetHeight);
+      const size = Math.min(wrap.clientWidth, wrap.clientHeight);
       if (size === 0) return;
       canvas.width = size;
       canvas.height = size;
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
       const pinCount =
         pinCountRef.current > 0 ? pinCountRef.current : (defaultPinCount ?? 0);
       if (pinCount > 0) drawFrame(pinCount);
     });
-    observer.observe(canvas);
+    observer.observe(wrap);
     return () => observer.disconnect();
   }, [drawFrame, defaultPinCount]);
 
   return (
     <canvas
       ref={canvasRef}
+      className="rounded-lg bg-white"
       style={{ display: "block", width: "100%", height: "100%" }}
     />
   );

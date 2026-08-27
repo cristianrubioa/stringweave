@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { PanelShell } from "@/components/panel-shell";
 import {
   StringArtCanvas,
   type StringArtCanvasHandle,
@@ -17,9 +18,15 @@ const MAX_SIZE = 5 * 1024 * 1024;
 
 interface Props {
   onSequenceReady: (data: { sequence: number[]; pinCount: number }) => void;
+  panelOpen: boolean;
+  onClosePanel: () => void;
 }
 
-export function GenerateTab({ onSequenceReady }: Props) {
+export function GenerateTab({
+  onSequenceReady,
+  panelOpen,
+  onClosePanel,
+}: Props) {
   const [pinCount, setPinCount] = useState(320);
   const [strokeCount, setStrokeCount] = useState(2000);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -33,6 +40,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
   const workerRef = useRef<Worker | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadLabelId = useId();
+  const uploadHintId = useId();
 
   const handleFile = useCallback((file: File) => {
     if (!ACCEPTED.includes(file.type)) {
@@ -115,10 +123,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
 
   return (
     <div className="flex flex-1 min-h-0">
-      <aside
-        className="flex flex-col gap-5 shrink-0 border-r px-6 pt-6"
-        style={{ width: "var(--panel-w, 20rem)" }}
-      >
+      <PanelShell open={panelOpen} onClose={onClosePanel}>
         <TabsList className="w-full shrink-0">
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
@@ -130,6 +135,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
           <button
             type="button"
             aria-labelledby={uploadLabelId}
+            aria-describedby={previewUrl ? undefined : uploadHintId}
             onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => {
               e.preventDefault();
@@ -151,7 +157,10 @@ export function GenerateTab({ onSequenceReady }: Props) {
                 className="h-full w-full object-contain rounded-lg"
               />
             ) : (
-              <span className="text-sm text-muted-foreground text-center px-2">
+              <span
+                id={uploadHintId}
+                className="text-sm text-muted-foreground text-center px-2"
+              >
                 Drag &amp; drop or click to upload
                 <br />
                 <span className="text-xs">JPEG · PNG · WebP · Max 5 MB</span>
@@ -162,6 +171,7 @@ export function GenerateTab({ onSequenceReady }: Props) {
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
+            aria-labelledby={uploadLabelId}
             className="sr-only"
             onChange={onFileInput}
           />
@@ -200,13 +210,14 @@ export function GenerateTab({ onSequenceReady }: Props) {
             <span className="text-sm tabular-nums">{strokeCount}</span>
           </div>
           <Slider
+            aria-label="Strokes"
             min={100}
             max={5000}
             step={100}
             value={[strokeCount]}
             onValueChange={(v) => setStrokeCount(Array.isArray(v) ? v[0] : v)}
           />
-          <div className="flex justify-between text-xs text-muted-foreground/50 mt-0.5">
+          <div className="flex justify-between text-xs text-muted-foreground mt-0.5">
             <span>100</span>
             <span>5000</span>
           </div>
@@ -253,19 +264,14 @@ export function GenerateTab({ onSequenceReady }: Props) {
             @cristianrubioa
           </a>
         </div>
-      </aside>
+      </PanelShell>
 
       <div className="relative flex-1 min-w-0 min-h-0 overflow-hidden">
-        <div className="absolute inset-6 flex items-center justify-center">
-          <div
-            className="relative rounded-lg border bg-white overflow-hidden"
-            style={{
-              height: "100%",
-              width: "auto",
-              maxWidth: "100%",
-              aspectRatio: "1 / 1",
-            }}
-          >
+        <div
+          data-slot="canvas-wrap"
+          className="absolute inset-6 flex items-center justify-center"
+        >
+          <div className="relative">
             <StringArtCanvas ref={canvasRef} defaultPinCount={320} />
             {sequence && (
               <button

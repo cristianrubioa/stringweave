@@ -4,6 +4,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Base UI's Tabs Panel forces its own `display` inline style on every render
+   (consumer style.display is ignored), but it does correctly mark the
+   inactive keepMounted panel with the native `inert` attribute — hide it
+   through that instead of fighting the inline style. */
+[data-slot="tabs-content"][inert] {
+  /* biome-ignore lint/complexity/noImportantStyles: must beat Base UI's own persistent inline display:flex on this element */
+  display: none !important;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

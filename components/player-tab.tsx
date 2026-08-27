@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { PanelShell } from "@/components/panel-shell";
 import {
   StringArtCanvas,
   type StringArtCanvasHandle,
@@ -25,9 +26,16 @@ const HOLD_INTERVAL_MS = 80;
 interface Props {
   sharedSequence?: { sequence: number[]; pinCount: number } | null;
   onClearSequence?: () => void;
+  panelOpen: boolean;
+  onClosePanel: () => void;
 }
 
-export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
+export function PlayerTab({
+  sharedSequence,
+  onClearSequence,
+  panelOpen,
+  onClosePanel,
+}: Props) {
   const [sequence, setSequence] = useState<number[] | null>(null);
   const [pinCount, setPinCount] = useState(0);
   const [position, setPosition] = useState(0);
@@ -39,6 +47,7 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [speed, setSpeed] = useState(30);
 
+  const sequenceLabelId = useId();
   const canvasRef = useRef<StringArtCanvasHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const positionRef = useRef(0);
@@ -259,17 +268,14 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
 
   return (
     <div className="flex flex-1 min-h-0">
-      <aside
-        className="flex flex-col gap-5 shrink-0 border-r px-6 pt-6"
-        style={{ width: "var(--panel-w, 20rem)" }}
-      >
+      <PanelShell open={panelOpen} onClose={onClosePanel}>
         <TabsList className="w-full shrink-0">
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
         </TabsList>
 
         <div>
-          <Label className="block mb-2 text-base">
+          <Label id={sequenceLabelId} className="block mb-2 text-base">
             {sequenceSource === "file" ? "Sequence file" : "Sequence"}
           </Label>
           {sequenceSource === null ? (
@@ -306,6 +312,7 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
             ref={fileInputRef}
             type="file"
             accept=".txt,text/plain"
+            aria-labelledby={sequenceLabelId}
             className="sr-only"
             onChange={handleFileChange}
           />
@@ -322,6 +329,7 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
                 </span>
               </div>
               <Slider
+                aria-label="Timeline"
                 min={0}
                 max={total - 1}
                 step={1}
@@ -425,21 +433,14 @@ export function PlayerTab({ sharedSequence, onClearSequence }: Props) {
             @cristianrubioa
           </a>
         </div>
-      </aside>
+      </PanelShell>
 
       <div className="relative flex-1 min-w-0 min-h-0 overflow-hidden">
-        <div className="absolute inset-6 flex items-center justify-center">
-          <div
-            className="rounded-lg border bg-white overflow-hidden"
-            style={{
-              height: "100%",
-              width: "auto",
-              maxWidth: "100%",
-              aspectRatio: "1 / 1",
-            }}
-          >
-            <StringArtCanvas ref={canvasRef} />
-          </div>
+        <div
+          data-slot="canvas-wrap"
+          className="absolute inset-6 flex items-center justify-center"
+        >
+          <StringArtCanvas ref={canvasRef} />
         </div>
       </div>
     </div>

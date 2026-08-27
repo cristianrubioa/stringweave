@@ -7,7 +7,12 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 type SharedSequence = { sequence: number[]; pinCount: number };
 
-export function AppTabs() {
+interface Props {
+  panelOpen: boolean;
+  onClosePanel: () => void;
+}
+
+export function AppTabs({ panelOpen, onClosePanel }: Props) {
   const [activeTab, setActiveTab] = useState("generate");
   const [sharedSequence, setSharedSequence] = useState<SharedSequence | null>(
     null,
@@ -24,7 +29,11 @@ export function AppTabs() {
         keepMounted
         style={{ display: "flex", flex: 1, minHeight: 0 }}
       >
-        <GenerateTab onSequenceReady={setSharedSequence} />
+        <GenerateTab
+          onSequenceReady={setSharedSequence}
+          panelOpen={panelOpen}
+          onClosePanel={onClosePanel}
+        />
       </TabsContent>
       <TabsContent
         value="player"
@@ -34,6 +43,8 @@ export function AppTabs() {
         <PlayerTab
           sharedSequence={sharedSequence}
           onClearSequence={() => setSharedSequence(null)}
+          panelOpen={panelOpen}
+          onClosePanel={onClosePanel}
         />
       </TabsContent>
     </Tabs>
