@@ -83,6 +83,7 @@ export function GenerateTab({
   const generate = useCallback(() => {
     if (!imageFile || running) return;
 
+    onClosePanel();
     workerRef.current?.terminate();
     setRunning(true);
     setSequence(null);
@@ -119,7 +120,14 @@ export function GenerateTab({
       worker.postMessage({ imageData, pinCount, strokeCount });
     };
     img.src = url;
-  }, [imageFile, pinCount, strokeCount, running, onSequenceReady]);
+  }, [
+    imageFile,
+    pinCount,
+    strokeCount,
+    running,
+    onSequenceReady,
+    onClosePanel,
+  ]);
 
   return (
     <div className="flex flex-1 min-h-0">
@@ -278,9 +286,9 @@ export function GenerateTab({
                 type="button"
                 onClick={() => canvasRef.current?.exportPng()}
                 title="Download as PNG"
-                className="absolute top-2 right-2 size-9 flex items-center justify-center rounded-md bg-background/80 border hover:bg-background transition-colors"
+                className="fixed bottom-6 right-6 z-20 size-14 rounded-full shadow-lg md:absolute md:top-2 md:right-2 md:bottom-auto md:size-9 md:rounded-md md:shadow-none flex items-center justify-center bg-background/90 md:bg-background/80 border hover:bg-background transition-colors"
               >
-                <i className="fa-solid fa-download text-sm" />
+                <i className="fa-solid fa-download text-lg md:text-sm" />
               </button>
             )}
           </div>

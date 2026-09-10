@@ -290,12 +290,14 @@ export function PlayerTab({
             </Button>
           ) : (
             <div className="flex gap-2">
-              <div className="flex items-center gap-2 flex-1 h-11 rounded-md border px-3 text-sm text-muted-foreground overflow-hidden">
-                <i className="fa-solid fa-check shrink-0" />
-                <span className="truncate">
-                  {sequenceSource === "generate"
-                    ? "From Generate"
-                    : (fileName ?? "sequence.txt")}
+              <div className="flex items-center flex-1 h-11 rounded-md border px-3 overflow-hidden">
+                <span className="flex items-center gap-1.5 max-w-full rounded-full bg-green-500/15 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-400">
+                  <i className="fa-solid fa-check shrink-0" />
+                  <span className="truncate">
+                    {sequenceSource === "generate"
+                      ? "From Generate"
+                      : (fileName ?? "sequence.txt")}
+                  </span>
                 </span>
               </div>
               <Button
