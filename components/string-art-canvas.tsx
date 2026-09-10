@@ -36,7 +36,7 @@ export function StringArtCanvas({ ref, defaultPinCount }: Props) {
   const getLayout = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
-    const size = canvas.width;
+    const size = canvas.clientWidth;
     const cx = size / 2;
     const cy = size / 2;
     const r = size * 0.47;
@@ -164,10 +164,13 @@ export function StringArtCanvas({ ref, defaultPinCount }: Props) {
     const observer = new ResizeObserver(() => {
       const size = Math.min(wrap.clientWidth, wrap.clientHeight);
       if (size === 0) return;
-      canvas.width = size;
-      canvas.height = size;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
       canvas.style.width = `${size}px`;
       canvas.style.height = `${size}px`;
+      const ctx = canvas.getContext("2d");
+      ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
       const pinCount =
         pinCountRef.current > 0 ? pinCountRef.current : (defaultPinCount ?? 0);
       if (pinCount > 0) drawFrame(pinCount);

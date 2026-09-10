@@ -27,7 +27,7 @@ export function Header({ panelOpen, onTogglePanel }: Props) {
       >
         StringWeave
       </span>
-      <span className="text-sm text-muted-foreground font-normal">
+      <span className="hidden md:inline text-sm text-muted-foreground font-normal">
         Art Generator
       </span>
       <a className="crubio-home-link" href="https://crubio.fyi">

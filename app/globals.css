@@ -136,4 +136,8 @@
   html {
     @apply font-sans;
   }
+  html,
+  body {
+    overflow-x: hidden;
+  }
 }
