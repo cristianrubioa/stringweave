@@ -268,7 +268,30 @@ export function PlayerTab({
 
   return (
     <div className="flex flex-1 min-h-0">
-      <PanelShell open={panelOpen} onClose={onClosePanel}>
+      <PanelShell
+        open={panelOpen}
+        onClose={onClosePanel}
+        footer={
+          <div
+            className="border-t px-6 text-center text-sm"
+            style={{
+              color: "var(--footer-text-color, #4b5563)",
+              paddingTop: "var(--footer-padding-y, 0.75rem)",
+              paddingBottom: "var(--footer-padding-y, 0.75rem)",
+            }}
+          >
+            Made with <span className="text-red-400 text-base">♥</span> by{" "}
+            <a
+              href="https://github.com/cristianrubioa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              @cristianrubioa
+            </a>
+          </div>
+        }
+      >
         <TabsList className="w-full shrink-0">
           <TabsTrigger value="generate">Generate</TabsTrigger>
           <TabsTrigger value="player">Player</TabsTrigger>
@@ -417,24 +440,6 @@ export function PlayerTab({
             </div>
           </>
         )}
-
-        <div
-          className="-mx-6 px-6 mt-auto border-t text-center text-sm text-muted-foreground"
-          style={{
-            paddingTop: "var(--footer-padding-y, 0.75rem)",
-            paddingBottom: "var(--footer-padding-y, 0.75rem)",
-          }}
-        >
-          Made with <span className="text-red-400 text-base">♥</span> by{" "}
-          <a
-            href="https://github.com/cristianrubioa"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors"
-          >
-            @cristianrubioa
-          </a>
-        </div>
       </PanelShell>
 
       <div className="relative flex-1 min-w-0 min-h-0 overflow-hidden">
